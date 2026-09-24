@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2026 Snowflake Inc.
+  SPDX-License-Identifier: Apache-2.0
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/4.10.4/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+        Records model transfer objects deserialized from service responses and components store injected
+        collaborators such as WebClientService. Defensive copies on every accessor would add allocation to the
+        streaming data path without protecting against a caller within the same ClassLoader.
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Amazon Signature Version 4 canonical headers require line feed separators independent of platform -->
+    <Match>
+        <Class name="net.snowflake.openflow.components.snowpipe.streaming.transfer.S3ObjectTransferClient" />
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE" />
+    </Match>
+
+    <!-- Snowpark Container Services mounts credentials at fixed paths that the secondary constructor overrides -->
+    <Match>
+        <Class name="net.snowflake.openflow.components.snowpipe.streaming.authorization.SnowflakeManagedTokenAuthorizationProvider" />
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME" />
+    </Match>
+
+    <!-- Retrying a File Fragment transfer rethrows the original failure after restoring the interrupt status -->
+    <Match>
+        <Class name="net.snowflake.openflow.processors.snowpipe.streaming.StandardSnowpipeStreamingService" />
+        <Method name="insertFileFragments" />
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION" />
+    </Match>
+</FindBugsFilter>
